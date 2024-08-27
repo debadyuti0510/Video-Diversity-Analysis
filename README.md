@@ -57,14 +57,14 @@ CLIP, LR+CLIP and Deepface are benchmarked on the AffectNet and FairFace dataset
 ## t-SNE Visualization of CLIP embeddings 
 
 ### t-SNE on FairFace Training Split
-![Fairface_Training_tsne](Demography_experiments\training_fairface_tsne.png)
+![Fairface_Training_tsne](Demography_experiments/training_fairface_tsne.png)
 ### t-SNE on FairFace Validation Split
-![Fairface_Validation_tsne](Demography_experiments\validation_fairface_tsne.png)
+![Fairface_Validation_tsne](Demography_experiments/validation_fairface_tsne.png)
 ### t-SNE on AffectNet Training Split
-![AffectNet_Training_tsne](Demography_experiments\training_affectnet_tsne.png)
+![AffectNet_Training_tsne](Demography_experiments/training_affectnet_tsne.png)
 ### t-SNE on AffectNet Validation Split
-![AffectNet_Validation_tsne](Demography_experiments\validation_affectnet_tsne.png)
+![AffectNet_Validation_tsne](Demography_experiments/validation_affectnet_tsne.png)
 
 
 ## Notes
-I am aware of the poor project structure, and since this is a work in progress and is primarily for my dissertation, there will be a complete re-organization of the files following good practices. Cheers!
+I am aware of the poor project structure. Since this is a work in progress and is primarily for my dissertation, there will be a complete re-organization of the files following good practices after my deadline. Cheers!

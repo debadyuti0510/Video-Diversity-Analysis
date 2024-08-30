@@ -19,7 +19,12 @@ The dashboard of interactive visualizations should show up on : `http://127.0.0.
 
 ## Demography Model Benchmarks
 
-CLIP, LR+CLIP and Deepface are benchmarked on the AffectNet and FairFace datasets. Some experiments are also done to visualize the distribution of the data through t-SNE embeddings of the faces.
+The AffectNet and FairFace datasets need to be downloaded first:
+
+- [AffectNet Dataset](http://mohammadmahoor.com/affectnet/)
+- [FairFace Dataset](https://huggingface.co/datasets/HuggingFaceM4/FairFace)
+
+CLIP, LR+CLIP and Deepface are then benchmarked on the AffectNet and FairFace datasets. Some experiments are also done to visualize the distribution of the data through t-SNE embeddings of the faces.
 
 ### Race prediction performance on FairFace Dataset
 

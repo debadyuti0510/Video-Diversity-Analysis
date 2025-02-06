@@ -3,3 +3,4 @@ data/
 experiment/
 __pycache__/
 Demography_experiments/*.npy
+*.csv

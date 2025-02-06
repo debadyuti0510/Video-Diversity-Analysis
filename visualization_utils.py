@@ -15,6 +15,7 @@ def get_demography_df():
         with open(f"experiment/demography/{file}","r") as f:
             entry = json.load(f)
             entry["frame_id"] = int(file.split("_")[1])
+            entry["face_id"] = int(file.split("_")[2].split(".")[0])
             entries.append(entry)
     demography_df = pd.DataFrame(entries)
     return demography_df
@@ -29,7 +30,11 @@ def map_age(age):
             return f"{age_list[idx-1]}-{upper-1}"
     return "65+"
 
-
+def generate_csv():
+    demo_df = get_demography_df()
+    filtered_df = demo_df[["frame_id", "face_id", "dominant_gender", "gender", "age"]]
+    filtered_df["age_group"] = filtered_df.age.map(lambda x: "up to 50" if x <= 50 else "over 50")
+    filtered_df.to_csv("demography.csv")
 
 def generate_visualizations():
     print("Generating visualizations..")

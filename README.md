@@ -13,7 +13,11 @@ Note: There may be issues with running deepface on GPU locally, try using Kaggle
 
 Execute the following command to run the pipeline on a video file of your choice:
 
-`python pipeline.py "path/to/video"` 
+To generate visualizations - 
+`python pipeline.py -v "path/to/video"`
+
+To generate a CSV dump - 
+`python pipeline.py -d "path/to/video"` 
 
 The dashboard of interactive visualizations should show up on : `http://127.0.0.1:8050`
 

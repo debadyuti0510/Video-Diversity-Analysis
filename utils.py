@@ -6,7 +6,7 @@ import json
 import torch
 import numpy as np
 from deepface.modules import modeling, detection, preprocessing
-from deepface.extendedmodels import Age
+# from deepface.extendedmodels import Age
 from transformers import CLIPProcessor, CLIPModel
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -42,11 +42,11 @@ class ExperimentDataset(Dataset):
         # resize to a constant size
         image = transforms.Resize((224, 224))(image)
 
-        # Convert RGB image to BGR
-        bgr_image = cv2.cvtColor(np.array(to_pil_image(image)), cv2.COLOR_RGB2BGR)
+        # # Convert RGB image to BGR
+        # bgr_image = cv2.cvtColor(np.array(to_pil_image(image)), cv2.COLOR_RGB2BGR)
 
 
-        return image, bgr_image, self.img_files[idx].split(".")[0] # Remove the extension from the images
+        return image, self.img_files[idx].split(".")[0] # Remove the extension from the images
 
 def setup_experiment():
     # Remove faces and demography folders for the experiment
@@ -77,19 +77,24 @@ def run_experiment(video_file):
     clip_model, clip_processor = _load_clip()
     clip_model.to(device)
 
-    # Get DeepFace age model
-    age_model = _load_age_model()
+    # # Get DeepFace age model
+    # age_model = _load_age_model()
+
+    # Get LR claassifier for age
+    age_scaler, age_model = _load_age_model()
+
 
     # Get LR classifiers
     gender_model, emotion_model, race_model = _load_lr_classifiers()
     gender_labels = ["man", "woman"]
     race_labels = ["Asian", "Indian", "Black", "White", "Middle Eastern", "Latino Hispanic"]
     emotion_labels = ["Neutral", "Happy", "Sad", "Surprise", "Fear", "Disgust", "Anger"]
+    age_labels = ["10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "more than 70"]
 
     # Loop over each batch of images
-    for images, bgr_images, filenames in tqdm(inference_dataloader):
-        # Predict age
-        apparent_ages = _predict_age(age_model, bgr_images)
+    for images, filenames in tqdm(inference_dataloader):
+        # # Predict age
+        # apparent_ages = _predict_age(age_model, bgr_images)
 
         pil_images = [to_pil_image(i) for i in images]
 
@@ -104,12 +109,19 @@ def run_experiment(video_file):
         race_probabilities = _predict_race(race_model, image_embeds)
         # Predict emotion
         emotion_probabilities = _predict_emotion(emotion_model, image_embeds)
+        # Predict age
+        age_probabilities = _predict_age(age_scaler, age_model, image_embeds)
 
         for idx, file in enumerate(filenames):
             demo_data = {}
 
-            # Update apparent ages
-            demo_data["age"] = int(apparent_ages[idx])
+            # # Update apparent ages
+            # demo_data["age"] = int(apparent_ages[idx])
+            # Update probabilities for age
+            # demo_data["age"] = {
+            #     r : float(prob) for r,prob in zip(age_labels, age_probabilities[idx]) 
+            # }
+            demo_data["age"] = age_labels[np.argmax(age_probabilities[idx])]
 
             # Update probabilities for race
             demo_data["race"] = {
@@ -165,17 +177,21 @@ def _extract_faces_from_video(video_file):
     cap.release()
     cv2.destroyAllWindows()
 
-def _predict_age(age_model, bgr_images):
+# def _predict_age(age_model, bgr_images):
     
-    # Returns predictions of each batch - (batch_size, age_classes)
-    age_preds = age_model(np.array(bgr_images).squeeze())
+#     # Returns predictions of each batch - (batch_size, age_classes)
+#     age_preds = age_model(np.array(bgr_images).squeeze())
 
-    output_indexes = np.arange(101)
+#     output_indexes = np.arange(101)
 
-    # Multiply each age class probability by its corresponding age index and sum across the age axis
-    apparent_ages = np.sum(age_preds * output_indexes, axis=1)
+#     # Multiply each age class probability by its corresponding age index and sum across the age axis
+#     apparent_ages = np.sum(age_preds * output_indexes, axis=1)
 
-    return apparent_ages
+#     return apparent_ages
+
+def _predict_age(age_scaler, age_model, images):
+    age_preds = age_model.predict_proba(age_scaler.transform(images))
+    return age_preds
 
 def _predict_gender(gender_model, images):
     gender_preds = gender_model.predict_proba(images)
@@ -239,15 +255,15 @@ def _load_clip():
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     return model, processor
 
-def _generate_clip_embeddings(model, processor, images):
-    """
-    Input: CLIPModel, CLIPProcessor, Batch of images as pytorch tensors
-    Output: Tensor of embeddings of shape: (batch, embedding_size)
-    """
-    images = [to_pil_image(img) for img in images]
-    inputs = processor(images=images, return_tensors="pt", padding=True)
-    outputs = model(**inputs)
-    return image_embeds
+# def _generate_clip_embeddings(model, processor, images):
+#     """
+#     Input: CLIPModel, CLIPProcessor, Batch of images as pytorch tensors
+#     Output: Tensor of embeddings of shape: (batch, embedding_size)
+#     """
+#     images = [to_pil_image(img) for img in images]
+#     inputs = processor(images=images, return_tensors="pt", padding=True)
+#     outputs = model(**inputs)
+#     return image_embeds
 
 def _load_lr_classifiers():
     gender_clf = joblib.load("models/lr_clf_gender.joblib")
@@ -256,14 +272,20 @@ def _load_lr_classifiers():
     return gender_clf, emotion_clf, race_clf
 
 
+# def _load_age_model():
+#     # if not os.path.exists('/root/.deepface/weights'):
+#     #     os.mkdir('/root/.deepface')
+#     #     os.mkdir('/root/.deepface/weights')
+#     age_model = modeling.build_model("Age").model
+#     return age_model
+
 def _load_age_model():
     # if not os.path.exists('/root/.deepface/weights'):
     #     os.mkdir('/root/.deepface')
     #     os.mkdir('/root/.deepface/weights')
-    age_model = modeling.build_model("Age").model
-    return age_model
-
-
+    age_scaler = joblib.load("models/projected_scaler.joblib")
+    age_clf = joblib.load("models/lr_clf_proj_age.joblib")
+    return (age_scaler, age_clf)
 
 
 # _get_and_dump_faces()

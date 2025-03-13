@@ -23,17 +23,18 @@ def get_demography_df():
 
 
 # Divide into age-categories
-def map_age(age):
-    age_list = [0, 18, 25, 45, 65]
-    for idx, upper in enumerate(age_list):
-        if age < upper:
-            return f"{age_list[idx-1]}-{upper-1}"
-    return "65+"
+# def map_age(age):
+#     age_list = [0, 18, 25, 45, 65]
+#     for idx, upper in enumerate(age_list):
+#         if age < upper:
+#             return f"{age_list[idx-1]}-{upper-1}"
+#     return "65+"
+
 
 def generate_csv():
     demo_df = get_demography_df()
     filtered_df = demo_df[["frame_id", "face_id", "dominant_gender", "gender", "age"]]
-    filtered_df["age_group"] = filtered_df.age.map(lambda x: "up to 50" if x <= 50 else "over 50")
+    filtered_df["age_group"] = filtered_df.age.map(lambda x: "up to 50" if x not in {"50-59", "60-69", "more than 70"} else "over 50")
     filtered_df.to_csv("demography.csv")
 
 def generate_visualizations():
@@ -41,8 +42,9 @@ def generate_visualizations():
 
     demo_df = get_demography_df()
 
-    # Map raw age into age groups 
-    demo_df["age_group"] = demo_df.age.apply(map_age)
+    # # Map raw age into age groups 
+    # demo_df["age_group"] = demo_df.age.apply(map_age)
+    demo_df["age_group"] = demo_df.age.map(lambda x: "up to 50" if x not in {"50-59", "60-69", "more than 70"} else "over 50")
 
     app = Dash()
 

@@ -5,7 +5,7 @@ import joblib
 import json
 import torch
 import numpy as np
-from deepface.modules import modeling, detection, preprocessing
+# from deepface.modules import modeling, detection, preprocessing
 # from deepface.extendedmodels import Age
 from transformers import CLIPProcessor, CLIPModel
 from torch.utils.data import DataLoader, Dataset
@@ -100,8 +100,8 @@ def run_experiment(video_file):
         pil_images = [to_pil_image(i) for i in images]
 
         # Get clip embeddings for other models
-        image_inputs = clip_processor(images=pil_images, return_tensors="pt", padding=True).to(device)
-        image_embeds = clip_model.get_image_features(**image_inputs)
+        image_inputs = clip_processor(text=["blah"]*len(pil_images), images=pil_images, return_tensors="pt", padding=True).to(device)
+        image_embeds = clip_model(**image_inputs).image_embeds
         image_embeds = image_embeds.detach().cpu() 
 
         # Predict gender

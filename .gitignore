@@ -5,3 +5,6 @@ __pycache__/
 Demography_experiments/*.npy
 *.csv
 */embeddings/
+*.npy
+AgeResults.txt
+age_exp.tex

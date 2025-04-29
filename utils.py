@@ -5,7 +5,7 @@ import joblib
 import json
 import torch
 import numpy as np
-from deepface.modules import modeling, detection, preprocessing
+# from deepface.modules import modeling, detection, preprocessing
 # from deepface.extendedmodels import Age
 from transformers import CLIPProcessor, CLIPModel
 from torch.utils.data import DataLoader, Dataset
@@ -86,10 +86,11 @@ def run_experiment(video_file):
 
     # Get LR classifiers
     gender_model, emotion_model, race_model = _load_lr_classifiers()
-    gender_labels = ["man", "woman"]
+    gender_labels = ["Male", "Female"]
     race_labels = ["Asian", "Indian", "Black", "White", "Middle Eastern", "Latino Hispanic"]
     emotion_labels = ["Neutral", "Happy", "Sad", "Surprise", "Fear", "Disgust", "Anger"]
-    age_labels = ["10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "more than 70"]
+    age_labels = ["0-2", "3-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "more than 70"]
+    age_groups = ["Up to 50", "Over 50"]
 
     # Loop over each batch of images
     for images, filenames in tqdm(inference_dataloader):
@@ -99,8 +100,8 @@ def run_experiment(video_file):
         pil_images = [to_pil_image(i) for i in images]
 
         # Get clip embeddings for other models
-        image_inputs = clip_processor(images=pil_images, return_tensors="pt", padding=True).to(device)
-        image_embeds = clip_model.get_image_features(**image_inputs)
+        image_inputs = clip_processor(text=["blah"]*len(pil_images), images=pil_images, return_tensors="pt", padding=True).to(device)
+        image_embeds = clip_model(**image_inputs).image_embeds
         image_embeds = image_embeds.detach().cpu() 
 
         # Predict gender
@@ -121,7 +122,16 @@ def run_experiment(video_file):
             # demo_data["age"] = {
             #     r : float(prob) for r,prob in zip(age_labels, age_probabilities[idx]) 
             # }
-            demo_data["age"] = age_labels[np.argmax(age_probabilities[idx])]
+            demo_data["age"] = {
+                r : float(prob) for r,prob in zip(age_labels, age_probabilities[idx]) 
+            }
+            demo_data["dominant_age"] = age_labels[np.argmax(age_probabilities[idx])]
+            demo_data["max_sum_age"] = {
+                "Over 50": sum(age_probabilities[idx][-3:]),
+                "Up to 50": sum(age_probabilities[idx][:-3])
+            }
+
+            demo_data["age_group"] = sorted(demo_data["max_sum_age"].items(), key=lambda x: x[1], reverse=True)[0][0] # Sort in descending order by prob sum, and get key
 
             # Update probabilities for race
             demo_data["race"] = {

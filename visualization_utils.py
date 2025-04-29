@@ -33,8 +33,8 @@ def get_demography_df():
 
 def generate_csv():
     demo_df = get_demography_df()
-    filtered_df = demo_df[["frame_id", "face_id", "dominant_gender", "gender", "age"]]
-    filtered_df["age_group"] = filtered_df.age.map(lambda x: "up to 50" if x not in {"50-59", "60-69", "more than 70"} else "over 50")
+    filtered_df = demo_df[["frame_id", "face_id", "dominant_gender", "gender", "dominant_age", "age", "age_group", "max_sum_age"]]
+    # filtered_df["age_group"] = filtered_df.age.map(lambda x: "up to 50" if x not in {"50-59", "60-69", "more than 70"} else "over 50")
     filtered_df.to_csv("demography.csv")
 
 def generate_visualizations():
@@ -44,7 +44,7 @@ def generate_visualizations():
 
     # # Map raw age into age groups 
     # demo_df["age_group"] = demo_df.age.apply(map_age)
-    demo_df["age_group"] = demo_df.age.map(lambda x: "up to 50" if x not in {"50-59", "60-69", "more than 70"} else "over 50")
+    # demo_df["age_group"] = demo_df.dominant_age.map(lambda x: "Up to 50" if x not in {"50-59", "60-69", "more than 70"} else "Over 50")
 
     app = Dash()
 
